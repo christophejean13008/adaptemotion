@@ -344,11 +344,13 @@ body.seance #fini{display:block}
   <div id="listePhotos"></div>
   <div class="reglages" id="actionsPhotos">
     <button class="fort" id="ajoutRenf">Prendre une photo</button>
+    <button class="fort" id="libRenf">Choisir dans les photos</button>
     <button id="exportRenf">Sauvegarder dans un fichier</button>
     <button id="importRenf">Restaurer un fichier</button>
   </div>
-  <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
-  <input type="file" id="jsonInput" accept="application/json,.json" style="display:none">
+  <input type="file" id="camIn" accept="image/*" capture="environment" style="position:absolute;left:-9999px">
+  <input type="file" id="libIn" accept="image/*" style="position:absolute;left:-9999px">
+  <input type="file" id="jsonInput" accept="application/json,.json" style="position:absolute;left:-9999px">
 </section>
 <section id="editPhoto" class="screen">
   <div class="tete"><h1>Nouvelle photo</h1></div>
@@ -485,7 +487,7 @@ try{ const raw=localStorage.getItem("adaptemotion")||localStorage.getItem("apais
      if(raw) Object.assign(DB,JSON.parse(raw)); }catch(e){ PERSIST=false; }
 function ranger(){ if(!PERSIST) return;
   try{ localStorage.setItem("adaptemotion",JSON.stringify(
-    {eleves:DB.eleves,entrees:DB.entrees,reglages:DB.reglages})); }
+    {eleves:DB.eleves,entrees:DB.entrees,reglages:DB.reglages,renf:DB.renf})); }
   catch(e){ PERSIST=false; etatStock(); } }
 function etatStock(){
   $("#etatStock").textContent = PERSIST
@@ -564,132 +566,93 @@ const DEFIS=[
 ];
 
 /* ============ renforçateurs : photos + sablier ============ */
-DB.renf=[];
+if(!DB.renf) DB.renf=[];
 let renfCourant=null, minRenf=3, sablierT=null, photoTmp=null, minForm=3;
-let IDB=null, STOCK="aucun";
 
-/* --- couche de stockage, testée pour de vrai au démarrage --- */
-function idbOuvrir(){ return new Promise(res=>{
-  let fini=false; const ok=v=>{ if(!fini){ fini=true; res(v); } };
+/* --- photos : mémoire vive + IndexedDB, à la manière d'Adaptaccueil --- */
+const photos={};
+let pdb=null;
+function idbOpen(){ return new Promise(res=>{
+  let fini=false; const ok=()=>{ if(!fini){ fini=true; res(); } };
   try{
-    if(!window.indexedDB) return ok(false);
-    const rq=indexedDB.open("adaptemotion",1);
-    rq.onupgradeneeded=()=>{ const d=rq.result;
-      if(!d.objectStoreNames.contains("renf")) d.createObjectStore("renf",{keyPath:"id"}); };
-    rq.onsuccess=()=>{ IDB=rq.result; ok(true); };
-    rq.onerror=()=>ok(false); rq.onblocked=()=>ok(false);
-    setTimeout(()=>ok(false),3000);
-  }catch(e){ ok(false); } }); }
-function idbLire(){ return new Promise(res=>{
-  if(!IDB) return res(null);
-  try{ const r=IDB.transaction("renf","readonly").objectStore("renf").getAll();
-    r.onsuccess=()=>res(r.result||[]); r.onerror=()=>res(null);
-  }catch(e){ res(null); } }); }
-function idbEcrire(o){ return new Promise(res=>{
-  if(!IDB) return res(false);
-  try{ const t=IDB.transaction("renf","readwrite"); t.objectStore("renf").put(o);
-    t.oncomplete=()=>res(true); t.onerror=()=>res(false); t.onabort=()=>res(false);
-  }catch(e){ res(false); } }); }
-function idbEffacer(id){ return new Promise(res=>{
-  if(!IDB) return res(false);
-  try{ const t=IDB.transaction("renf","readwrite"); t.objectStore("renf").delete(id);
-    t.oncomplete=()=>res(true); t.onerror=()=>res(false);
-  }catch(e){ res(false); } }); }
+    const r=indexedDB.open("adaptemotion-photos",1);
+    r.onupgradeneeded=()=>r.result.createObjectStore("photos");
+    r.onsuccess=()=>{ pdb=r.result; ok(); };
+    r.onerror=ok; r.onblocked=ok; setTimeout(ok,3000);
+  }catch(e){ ok(); } }); }
+function idbAll(){ return new Promise(res=>{
+  if(!pdb) return res();
+  try{ const q=pdb.transaction("photos").objectStore("photos").openCursor();
+    q.onsuccess=()=>{ const c=q.result; if(c){ photos[c.key]=c.value; c.continue(); } else res(); };
+    q.onerror=()=>res();
+  }catch(e){ res(); } }); }
+function idbPut(k,v){ if(!pdb) return;
+  try{ pdb.transaction("photos","readwrite").objectStore("photos").put(v,k); }catch(e){} }
+function idbDel(k){ if(!pdb) return;
+  try{ pdb.transaction("photos","readwrite").objectStore("photos").delete(k); }catch(e){} }
 
-async function testerStockage(){
-  STOCK="aucun";
-  if(await idbOuvrir()){
-    const t={id:"__test",img:"x",min:1};
-    if(await idbEcrire(t)){
-      const l=await idbLire();
-      if(l&&l.some(x=>x.id==="__test")){ STOCK="idb"; await idbEffacer("__test"); }
-    }
-  }
-  if(STOCK==="aucun"){
-    try{ localStorage.setItem("adaptemotion.test","1");
-      if(localStorage.getItem("adaptemotion.test")==="1") STOCK="local";
-      localStorage.removeItem("adaptemotion.test");
-    }catch(e){}
-  }
+function redimensionner(file){ return new Promise((res,rej)=>{
+  const src=URL.createObjectURL(file), img=new Image();
+  img.onload=()=>{ const max=640,w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,max/Math.max(w,h));
+    const c=document.createElement("canvas");
+    c.width=Math.round(w*k); c.height=Math.round(h*k);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(src); res(c.toDataURL("image/jpeg",.82)); };
+  img.onerror=()=>{ URL.revokeObjectURL(src); rej(); };
+  img.src=src; }); }
+
+function prendrePhoto(depuisCamera,cb){
+  const inp=depuisCamera?$("#camIn"):$("#libIn");
+  inp.value="";
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    try{
+      const url=await redimensionner(f);
+      const id="p"+Date.now()+Math.random().toString(36).slice(2,6);
+      photos[id]=url; idbPut(id,url); cb(id);
+    }catch(e){ alert("Photo illisible, réessaie."); }
+  };
+  inp.click();
 }
-async function chargerPhotos(){
-  if(STOCK==="idb"){ DB.renf=(await idbLire())||[]; return; }
-  if(STOCK==="local"){
-    try{ const b=localStorage.getItem("adaptemotion.renf"); DB.renf=b?JSON.parse(b):[]; }
-    catch(e){ DB.renf=[]; }
-    return;
-  }
-  DB.renf=[];
+function ouvrirEdition(pid){
+  photoTmp=pid; minForm=3;
+  $("#apercu").src=photos[pid]; $("#nomRenf").value="";
+  $$("#minRenf button").forEach(x=>x.classList.toggle("on",x.dataset.m==="3"));
+  aller("editPhoto");
 }
-async function enregistrerPhotos(){
-  if(STOCK==="idb"){
-    for(const r of DB.renf){ if(!await idbEcrire(r)) return false; }
-    return true;
-  }
-  if(STOCK==="local"){
-    try{ localStorage.setItem("adaptemotion.renf",JSON.stringify(DB.renf)); return true; }
-    catch(e){ return false; }
-  }
-  return false;
-}
+$("#ajoutRenf").onclick=()=>prendrePhoto(true,ouvrirEdition);
+$("#libRenf").onclick=()=>prendrePhoto(false,ouvrirEdition);
+$$("#minRenf button").forEach(b=>b.onclick=()=>{
+  minForm=+b.dataset.m; $$("#minRenf button").forEach(x=>x.classList.toggle("on",x===b)); });
+$("#annulRenf").onclick=()=>{
+  if(photoTmp){ idbDel(photoTmp); delete photos[photoTmp]; photoTmp=null; }
+  aller("photos");
+};
+$("#validRenf").onclick=()=>{
+  if(!photoTmp) return aller("photos");
+  DB.renf.push({id:"r"+Date.now(),photo:photoTmp,n:$("#nomRenf").value.trim(),min:minForm});
+  photoTmp=null; ranger();
+  majListePhotos(); remplirRenf(); majDiag(); aller("photos");
+};
+
+function img(r){ return photos[r.photo]||""; }
 function majDiag(){
   const d=$("#diag"), n=DB.renf.length;
   d.className="";
-  if(STOCK==="idb"){ d.classList.add("ok");
-    d.innerHTML="<b>Les photos sont enregistrées sur cette tablette.</b>"+n+
-      " photo(s) en mémoire. Pense à « Sur l'écran d'accueil » depuis le menu Partager : "+
-      "Safari peut vider les données d'un site resté plusieurs jours sans visite, mais pas celles d'une app ajoutée à l'écran d'accueil."; }
-  else if(STOCK==="local"){ d.classList.add("moyen");
-    d.innerHTML="<b>Enregistrement limité.</b>"+n+
-      " photo(s). Cette tablette n'autorise que la petite mémoire : compte 4 photos au maximum. "+
-      "Utilise « Sauvegarder dans un fichier » pour garder une copie."; }
+  if(pdb&&PERSIST){ d.classList.add("ok");
+    d.innerHTML="<b>Les photos sont gardées sur cette tablette.</b>"+n+
+      " photo(s). Ajoute la page à l'écran d'accueil depuis le menu Partager : Safari peut vider "+
+      "les données d'un site resté plusieurs jours sans visite, mais pas celles d'une app installée."; }
+  else if(PERSIST){ d.classList.add("moyen");
+    d.innerHTML="<b>Les photos ne tiendront pas après la fermeture.</b>"+n+
+      " photo(s) utilisables maintenant. Utilise « Sauvegarder dans un fichier » pour les garder."; }
   else { d.classList.add("ko");
     d.innerHTML="<b>Rien ne peut être enregistré ici.</b>"+
-      "La page a été ouverte comme un fichier local ou dans un aperçu. Ouvre-la depuis son adresse internet "+
-      "(ta page GitHub) et tout fonctionnera. Les photos prises maintenant marchent jusqu'à la fermeture : "+
-      "« Sauvegarder dans un fichier » permet de les récupérer ensuite."; }
+      "La page a été ouverte comme fichier local ou dans un aperçu. Ouvre-la depuis son adresse internet "+
+      "(ta page GitHub) et l'enregistrement fonctionnera."; }
   const r=$("#resumeRenf");
-  if(r) r.textContent = STOCK==="aucun" ? "Enregistrement impossible sur cette page — ouvre le module pour le détail."
-    : n+" photo(s) enregistrée(s).";
+  if(r) r.textContent=n+" photo(s).";
 }
-
-/* --- photo --- */
-function redimensionner(file,cb){
-  const fr=new FileReader();
-  fr.onload=()=>{ const im=new Image();
-    im.onload=()=>{ const m=520,r=Math.min(1,m/Math.max(im.width,im.height));
-      const c=document.createElement("canvas");
-      c.width=Math.round(im.width*r); c.height=Math.round(im.height*r);
-      c.getContext("2d").drawImage(im,0,0,c.width,c.height);
-      cb(c.toDataURL("image/jpeg",.75)); };
-    im.onerror=()=>cb(null); im.src=fr.result; };
-  fr.onerror=()=>cb(null);
-  fr.readAsDataURL(file);
-}
-$("#ajoutRenf").onclick=()=>$("#photoInput").click();
-$("#photoInput").addEventListener("change",e=>{
-  const f=e.target.files&&e.target.files[0]; e.target.value="";
-  if(!f) return;
-  redimensionner(f,data=>{
-    if(!data){ alert("Photo illisible, réessaie."); return; }
-    photoTmp=data; minForm=3;
-    $("#apercu").src=data; $("#nomRenf").value="";
-    $$("#minRenf button").forEach(x=>x.classList.toggle("on",x.dataset.m==="3"));
-    aller("editPhoto");
-  });
-});
-$$("#minRenf button").forEach(b=>b.onclick=()=>{
-  minForm=+b.dataset.m; $$("#minRenf button").forEach(x=>x.classList.toggle("on",x===b)); });
-$("#annulRenf").onclick=()=>{ photoTmp=null; aller("photos"); };
-$("#validRenf").onclick=async()=>{
-  if(!photoTmp) return aller("photos");
-  const o={id:"r"+Date.now(),img:photoTmp,n:$("#nomRenf").value.trim(),min:minForm};
-  DB.renf.push(o); photoTmp=null;
-  const ok=await enregistrerPhotos();
-  if(!ok&&STOCK!=="aucun"){ DB.renf.pop();
-    alert("Mémoire pleine : supprime une photo avant d'en ajouter une autre."); }
-  majListePhotos(); remplirRenf(); majDiag(); aller("photos");
-};
 
 /* --- liste côté adulte --- */
 function majListePhotos(){
@@ -700,11 +663,11 @@ function majListePhotos(){
   }
   DB.renf.forEach((r,i)=>{
     const d=document.createElement("div"); d.className="miniRenf"; d.style.marginBottom="9px";
-    d.innerHTML='<img src="'+r.img+'" alt=""><span style="flex:1">'+(r.n?r.n+" · ":"")+r.min+
+    d.innerHTML='<img src="'+img(r)+'" alt=""><span style="flex:1">'+(r.n?r.n+" · ":"")+r.min+
       ' min</span><b style="color:var(--rose);padding:4px 10px;font-size:20px">✕</b>';
-    d.querySelector("b").onclick=async()=>{
-      const id=r.id; DB.renf.splice(i,1);
-      if(STOCK==="idb") await idbEffacer(id); else await enregistrerPhotos();
+    d.querySelector("b").onclick=()=>{
+      idbDel(r.photo); delete photos[r.photo];
+      DB.renf.splice(i,1); ranger();
       majListePhotos(); remplirRenf(); majDiag();
     };
     z.appendChild(d);
@@ -712,30 +675,38 @@ function majListePhotos(){
 }
 $("#ouvrirPhotos").onclick=()=>{ $("#panel").classList.remove("on"); majListePhotos(); majDiag(); aller("photos"); };
 
-/* --- sauvegarde / restauration dans un fichier --- */
+/* --- sauvegarde / restauration --- */
+function telecharger(nom,texte,type){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([texte],{type:type}));
+  a.download=nom; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+}
 $("#exportRenf").onclick=()=>{
   if(!DB.renf.length) return alert("Il n'y a aucune photo à sauvegarder.");
-  const b=new Blob([JSON.stringify({renf:DB.renf})],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(b);
-  a.download="adaptemotion-photos.json"; a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  const utiles={}; DB.renf.forEach(r=>{ if(photos[r.photo]) utiles[r.photo]=photos[r.photo]; });
+  telecharger("adaptemotion-photos.json",
+    JSON.stringify({app:"adaptemotion",renf:DB.renf,photos:utiles}),"application/json");
 };
-$("#importRenf").onclick=()=>$("#jsonInput").click();
-$("#jsonInput").addEventListener("change",e=>{
-  const f=e.target.files&&e.target.files[0]; e.target.value="";
-  if(!f) return;
-  const fr=new FileReader();
-  fr.onload=async()=>{
-    try{
-      const o=JSON.parse(fr.result);
-      if(!o.renf||!o.renf.length) return alert("Ce fichier ne contient pas de photos.");
-      const vus={}; DB.renf.forEach(r=>vus[r.id]=1);
-      o.renf.forEach(r=>{ if(r&&r.img&&!vus[r.id]) DB.renf.push({id:r.id||"r"+Math.random(),img:r.img,n:r.n||"",min:r.min||3}); });
-      await enregistrerPhotos(); majListePhotos(); remplirRenf(); majDiag();
-    }catch(err){ alert("Fichier illisible."); }
+$("#importRenf").onclick=()=>{
+  const inp=$("#jsonInput"); inp.value="";
+  inp.onchange=()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      try{
+        const d=JSON.parse(rd.result);
+        if(!d.renf||!d.renf.length) throw 0;
+        const vus={}; DB.renf.forEach(r=>vus[r.id]=1);
+        Object.entries(d.photos||{}).forEach(([k,v])=>{ photos[k]=v; idbPut(k,v); });
+        d.renf.forEach(r=>{ if(r&&r.photo&&!vus[r.id]) DB.renf.push(r); });
+        ranger(); majListePhotos(); remplirRenf(); majDiag();
+      }catch(e){ alert("Fichier non reconnu."); }
+    };
+    rd.readAsText(f);
   };
-  fr.readAsText(f);
-});
+  inp.click();
+};
 
 /* --- côté élève --- */
 function remplirRenf(){
@@ -751,14 +722,14 @@ function remplirRenf(){
   }
   DB.renf.forEach(r=>{
     const b=document.createElement("button"); b.className="renf";
-    b.innerHTML='<img src="'+r.img+'" alt="">'+(r.n?"<span>"+r.n+"</span>":"");
+    b.innerHTML='<img src="'+img(r)+'" alt="">'+(r.n?"<span>"+r.n+"</span>":"");
     b.onclick=()=>ouvrirSablier(r);
     z.appendChild(b);
   });
 }
 function ouvrirSablier(r){
   arreterSablier(); renfCourant=r; minRenf=r.min||3;
-  $("#sablierPhoto").src=r.img; $("#sablierNom").textContent=r.n||"";
+  $("#sablierPhoto").src=img(r); $("#sablierNom").textContent=r.n||"";
   $("#sablierFin").textContent=""; $("#sablierBtn").textContent="C'est parti";
   const d=$("#dureeRenf"); d.innerHTML="";
   [1,2,3,5,10].forEach(m=>{ const b=document.createElement("button");
@@ -799,7 +770,8 @@ function carillon(){ audio();
   });
 }
 async function demarrerStockage(){
-  await testerStockage(); await chargerPhotos();
+  await idbOpen(); await idbAll();
+  DB.renf=DB.renf.filter(r=>photos[r.photo]);
   majListePhotos(); remplirRenf(); majDiag();
 }
 
