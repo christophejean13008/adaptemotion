@@ -68,9 +68,15 @@ body[data-mode="seul"] #dureeRenf{display:none}
 #diag.moyen{background:rgba(224,167,106,.16);border-left:5px solid var(--sable)}
 #diag.ko{background:rgba(208,138,138,.18);border-left:5px solid var(--rose)}
 #listePhotos{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-bottom:14px}
-#actionsPhotos{gap:11px}
-#actionsPhotos button{padding:15px 20px;border-radius:16px;font-size:17px}
-#actionsPhotos .fort{background:var(--eau);color:#0e2b2a;flex:1;min-width:220px;font-size:19px;padding:18px 20px}
+#photos{padding-bottom:80px}
+#actionsPhotos{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+@media (max-aspect-ratio:3/4){#actionsPhotos{grid-template-columns:1fr}}
+#actionsPhotos button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;
+  padding:24px 16px;border-radius:22px;font-size:20px;line-height:1.25;text-align:center;background:var(--brume-haut)}
+#actionsPhotos button svg{width:54px;height:54px}
+#actionsPhotos #ajoutRenf{background:var(--eau);color:#0e2b2a;font-size:23px;padding:30px 16px}
+#actionsPhotos #ajoutRenf svg{width:72px;height:72px}
+#actionsPhotos button:active{opacity:.8}
 #ouvrirPhotos{width:100%;padding:18px;border-radius:18px;background:var(--eau);color:#0e2b2a;font-size:19px}
 #editPhoto{align-items:center;justify-content:center;gap:16px}
 #apercu{width:min(30vh,56vw);aspect-ratio:1;object-fit:cover;border-radius:22px;display:block;background:var(--brume)}
@@ -363,8 +369,22 @@ body.seance #fini{display:block}
   <div id="diag"></div>
   <div id="listePhotos"></div>
   <div class="reglages" id="actionsPhotos">
-    <button class="fort" id="ajoutRenf">Prendre une photo</button>
-    <button class="fort" id="libRenf">Choisir dans les photos</button>
+    <button id="ajoutRenf">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 16a3 3 0 0 1 3-3h6l3-5h14l3 5h6a3 3 0 0 1 3 3v20a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z"/>
+        <circle cx="24" cy="25" r="9"/>
+      </svg>
+      <span>Prendre une photo</span>
+    </button>
+    <button id="libRenf">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="13" y="7" width="30" height="24" rx="3"/>
+        <circle cx="22" cy="15" r="3"/>
+        <path d="M13 26l8-7 7 6 5-4 10 8"/>
+        <path d="M35 36v2a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V17a3 3 0 0 1 3-3h2"/>
+      </svg>
+      <span>Choisir dans les photos de la tablette</span>
+    </button>
   </div>
   <input type="file" id="camIn" accept="image/*" capture="environment" style="position:absolute;left:-9999px">
   <input type="file" id="libIn" accept="image/*" style="position:absolute;left:-9999px">
