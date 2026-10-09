@@ -49,15 +49,20 @@ body.seance .screen{padding-bottom:100px}
 .renf img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;display:block;background:var(--ombre)}
 .renf span{font-size:16px;text-align:center}
 #renfVide{color:var(--galet-doux);text-align:center;margin-top:40px}
-#sablierEcran{align-items:center;justify-content:center;gap:20px}
-#sablierPhoto{width:min(26vh,40vw);aspect-ratio:1;object-fit:cover;border-radius:22px;background:var(--brume)}
-#minuteurs{display:flex;align-items:center;justify-content:center;gap:5vw;flex-wrap:wrap}
-#sablierSvg{width:min(26vh,32vw);display:block}
-#disque{display:flex;flex-direction:column;align-items:center;gap:8px}
-#disqueSvg{width:min(26vh,34vw);display:block}
-#chrono{font-size:30px;margin:0;font-variant-numeric:tabular-nums;letter-spacing:.5px}
-#sablierNom{font-size:24px;margin:0;text-align:center}
-#sablierFin{font-size:26px;color:var(--eau);margin:0;min-height:1.4em;text-align:center}
+#sablierEcran{align-items:center;justify-content:center;gap:16px;overflow-y:auto}
+#sablierHaut{display:flex;align-items:center;justify-content:center;gap:4vw;flex:0 0 auto}
+@media (max-aspect-ratio:1/1){#sablierHaut{flex-direction:column;gap:16px}}
+#sablierCarte{display:flex;flex-direction:column;align-items:center;gap:9px;flex:0 0 auto}
+#sablierPhoto{width:min(23vh,32vw);aspect-ratio:1;object-fit:cover;border-radius:22px;background:var(--brume)}
+#minuteurs{display:flex;align-items:center;justify-content:center;gap:4vw;flex:0 0 auto}
+#sablierSvg{width:min(21vh,24vw);display:block}
+#disque{display:flex;flex-direction:column;align-items:center;gap:6px}
+#disqueSvg{width:min(21vh,26vw);display:block}
+#chrono{font-size:28px;margin:0;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+#sablierBtn{flex:0 0 auto;margin:0;padding:19px 46px;font-size:22px;border-radius:999px}
+#sablierNom{font-size:21px;margin:0;text-align:center}
+#sablierFin{font-size:23px;color:var(--eau);margin:0;min-height:1.3em;text-align:center;flex:0 0 auto}
+#dureeRenf{flex:0 0 auto}
 #dureeRenf{justify-content:center}
 body[data-mode="seul"] #dureeRenf{display:none}
 .miniRenf{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:var(--brume);font-size:15px}
@@ -334,8 +339,8 @@ body.seance #fini{display:block}
   <div id="grilleRenf"></div>
 </section>
 <section id="sablierEcran" class="screen">
-  <img id="sablierPhoto" alt="">
-  <p id="sablierNom"></p>
+  <div id="sablierHaut">
+  <div id="sablierCarte"><img id="sablierPhoto" alt=""><p id="sablierNom"></p></div>
   <div id="minuteurs">
   <svg id="sablierSvg" viewBox="0 0 100 140" aria-hidden="true">
     <defs>
@@ -356,6 +361,7 @@ body.seance #fini{display:block}
       <circle cx="60" cy="60" r="3.5" fill="#e8e4da"/>
     </svg>
     <p id="chrono">3:00</p>
+  </div>
   </div>
   </div>
   <div class="reglages" id="dureeRenf"></div>
