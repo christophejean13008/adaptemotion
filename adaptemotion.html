@@ -41,6 +41,25 @@ body.seance .screen{padding-bottom:100px}
 .tuile:active{transform:scale(.985);background:var(--brume-haut)}
 .tuile span{font-size:22px;text-align:center}
 .tuile svg{width:74px;height:74px;flex:0 0 auto}
+#sommaire .tuile:nth-child(5){grid-column:span 2}
+#grilleRenf{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;flex:1;min-height:0;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;align-content:start}
+@media (max-aspect-ratio:3/4){#grilleRenf{grid-template-columns:repeat(2,1fr)}}
+.renf{display:flex;flex-direction:column;gap:9px;padding:10px;border-radius:20px;background:var(--brume)}
+.renf img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;display:block;background:var(--ombre)}
+.renf span{font-size:16px;text-align:center}
+#renfVide{color:var(--galet-doux);text-align:center;margin-top:40px}
+#sablierEcran{align-items:center;justify-content:center;gap:20px}
+#sablierPhoto{width:min(26vh,40vw);aspect-ratio:1;object-fit:cover;border-radius:22px;background:var(--brume)}
+#sablierSvg{width:min(30vh,44vw);display:block}
+#sablierNom{font-size:24px;margin:0;text-align:center}
+#sablierFin{font-size:26px;color:var(--eau);margin:0;min-height:1.4em;text-align:center}
+#dureeRenf{justify-content:center}
+body[data-mode="seul"] #dureeRenf{display:none}
+.miniRenf{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:var(--brume);font-size:15px}
+.miniRenf img{width:40px;height:40px;object-fit:cover;border-radius:9px}
+#apercu{width:92px;height:92px;object-fit:cover;border-radius:14px;display:block;margin-bottom:12px}
+#formRenf{display:none;margin-top:12px}
 #accueilNom{flex:0 0 auto;color:var(--galet-doux);margin:0 0 2px;font-size:16px;min-height:1.4em}
 
 .lentille{width:74px;height:74px;border-radius:50%;
@@ -218,6 +237,7 @@ body.seance #fini{display:block}
     <button class="tuile" data-hub="breath"><div class="lentille"></div><span>Respirer</span></button>
     <button class="tuile" data-hub="wall"><div class="grappe"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>Le mur</span></button>
     <button class="tuile" data-hub="bouger"><span id="icoBouger"></span><span>Bouger</span></button>
+    <button class="tuile" data-hub="renf"><span id="icoRenf"></span><span>Ce que j'aime</span></button>
   </div>
 </section>
 
@@ -274,6 +294,30 @@ body.seance #fini{display:block}
 <section id="defiScreen" class="screen">
   <div class="tete"><h1>Bouger</h1></div>
   <div id="defi"><div class="gros"></div><p></p><button id="defiOk">C'est fait</button></div>
+</section>
+
+<!-- RENFORÇATEURS -->
+<section id="renf" class="screen">
+  <div class="tete"><h1>Ce que j'aime</h1></div>
+  <div id="grilleRenf"></div>
+</section>
+<section id="sablierEcran" class="screen">
+  <img id="sablierPhoto" alt="">
+  <p id="sablierNom"></p>
+  <svg id="sablierSvg" viewBox="0 0 100 140" aria-hidden="true">
+    <defs>
+      <clipPath id="clipHaut"><path d="M20 18 H80 L50 68 Z"/></clipPath>
+      <clipPath id="clipBas"><path d="M50 72 L80 122 H20 Z"/></clipPath>
+    </defs>
+    <rect id="sableHaut" x="20" y="18" width="60" height="50" fill="#e0a76a" clip-path="url(#clipHaut)"/>
+    <rect id="sableBas" x="20" y="122" width="60" height="0" fill="#e0a76a" clip-path="url(#clipBas)"/>
+    <rect id="filet" x="48.5" y="68" width="3" height="54" fill="#e0a76a" opacity="0"/>
+    <path d="M20 18 H80 L50 68 Z M50 72 L80 122 H20 Z" fill="none" stroke="#e8e4da" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M14 14 H86 M14 126 H86" stroke="#e8e4da" stroke-width="5" stroke-linecap="round"/>
+  </svg>
+  <div class="reglages" id="dureeRenf"></div>
+  <p id="sablierFin"></p>
+  <button id="sablierBtn" class="suite pret" style="max-width:280px">C'est parti</button>
 </section>
 
 <!-- MUR -->
@@ -333,6 +377,22 @@ body.seance #fini{display:block}
   <div class="bloc"><h3>Élèves (initiales conseillées)</h3>
     <div class="puce" id="puces"></div>
     <input type="text" id="nouvEleve" placeholder="Ajouter — puis Entrée">
+  </div>
+  <div class="bloc"><h3>Renforçateurs (photos prises avec l'élève)</h3>
+    <div class="puce" id="puceRenf"></div>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+    <div class="choix"><button id="ajoutRenf">Prendre ou choisir une photo</button></div>
+    <div id="formRenf">
+      <img id="apercu" alt="">
+      <input type="text" id="nomRenf" placeholder="Comment ça s'appelle ?">
+      <h3 style="margin:12px 0 8px">Durée du sablier</h3>
+      <div class="choix" id="minRenf">
+        <button data-m="1">1 min</button><button data-m="2">2 min</button>
+        <button class="on" data-m="3">3 min</button><button data-m="5">5 min</button><button data-m="10">10 min</button>
+      </div>
+      <div class="choix" style="margin-top:12px"><button id="validRenf">Ajouter</button><button id="annulRenf">Annuler</button></div>
+    </div>
+    <p class="note" id="etatRenf"></p>
   </div>
   <div class="bloc"><h3>Demander l'émotion et l'intensité</h3>
     <div class="choix" id="rBaro"><button class="on" data-b="1">Oui</button><button data-b="0">Non</button></div>
@@ -471,6 +531,76 @@ const DEFIS=[
   {i:"⇄",t:"Marcher dans le couloir",g:"2",p:"Deux allers-retours dans le couloir, à pas lents."}
 ];
 
+/* ============ renforçateurs ============ */
+if(!DB.renf) DB.renf=[];
+let renfCourant=null, minRenf=3, sablierT=null, photoTmp=null, minForm=3;
+
+function redimensionner(file,cb){
+  const fr=new FileReader();
+  fr.onload=()=>{ const im=new Image();
+    im.onload=()=>{ const m=420,r=Math.min(1,m/Math.max(im.width,im.height));
+      const c=document.createElement("canvas");
+      c.width=Math.round(im.width*r); c.height=Math.round(im.height*r);
+      c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+      cb(c.toDataURL("image/jpeg",.72)); };
+    im.src=fr.result; };
+  fr.readAsDataURL(file);
+}
+function remplirRenf(){
+  const z=$("#grilleRenf"); z.innerHTML="";
+  if(!DB.renf.length){ z.innerHTML='<p id="renfVide">Aucune photo pour l\'instant.<br>L\'adulte peut en ajouter dans les réglages.</p>'; return; }
+  DB.renf.forEach(r=>{
+    const b=document.createElement("button"); b.className="renf";
+    b.innerHTML='<img src="'+r.img+'" alt=""><span>'+r.n+"</span>";
+    b.onclick=()=>ouvrirSablier(r);
+    z.appendChild(b);
+  });
+}
+function ouvrirSablier(r){
+  arreterSablier(); renfCourant=r; minRenf=r.min||3;
+  $("#sablierPhoto").src=r.img; $("#sablierNom").textContent=r.n;
+  $("#sablierFin").textContent=""; $("#sablierBtn").textContent="C'est parti";
+  const d=$("#dureeRenf"); d.innerHTML="";
+  [1,2,3,5,10].forEach(m=>{ const b=document.createElement("button");
+    b.textContent=m+" min"; if(m===minRenf) b.classList.add("on");
+    b.onclick=()=>{ minRenf=m; $$("#dureeRenf button").forEach(x=>x.classList.toggle("on",x===b)); peindreSablier(1); };
+    d.appendChild(b); });
+  peindreSablier(1); aller("sablierEcran");
+}
+function peindreSablier(p){
+  $("#sableHaut").setAttribute("y",68-50*p); $("#sableHaut").setAttribute("height",50*p);
+  $("#sableBas").setAttribute("y",122-50*(1-p)); $("#sableBas").setAttribute("height",50*(1-p));
+  $("#filet").setAttribute("opacity",(p>0&&p<1&&sablierT)?.9:0);
+}
+function arreterSablier(){ clearInterval(sablierT); sablierT=null; }
+function lancerSablier(){
+  const total=minRenf*60*1000,t0=Date.now();
+  $("#sablierBtn").textContent="Arrêter";
+  $("#sablierFin").textContent="";
+  sablierT=setInterval(()=>{
+    const p=Math.max(0,1-(Date.now()-t0)/total);
+    peindreSablier(p);
+    if(p<=0){ arreterSablier(); peindreSablier(0);
+      $("#sablierFin").textContent="C'est fini."; $("#sablierBtn").textContent="Je range";
+      carillon(); }
+  },250);
+  peindreSablier(1); noter("renforçateur : "+renfCourant.n);
+}
+$("#sablierBtn").onclick=()=>{
+  if(sablierT){ arreterSablier(); peindreSablier(1); $("#sablierBtn").textContent="C'est parti"; return; }
+  if($("#sablierFin").textContent){ aller("renf"); return; }
+  lancerSablier();
+};
+function carillon(){ audio();
+  [523,659,784].forEach((f,i)=>{
+    const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*.42;
+    o.type="sine"; o.frequency.value=f;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.12,t+.05);
+    g.gain.exponentialRampToValueAtTime(.001,t+.9);
+    o.connect(g); g.connect(MASTER); o.start(t); o.stop(t+1);
+  });
+}
+
 /* ============ audio ============ */
 let AC=null,MASTER=null;
 function audio(){ if(AC){ if(AC.state==="suspended") AC.resume(); return; }
@@ -539,12 +669,14 @@ function aller(id){
   $("#maison").classList.toggle("show",id!=="home");
   if(id!=="breath") stopSouffle();
   if(id!=="wall") tousSonsOff();
+  if(id!=="sablierEcran") arreterSablier();
   if(id==="wall") setTimeout(dimensionner,40);
   boucle();
 }
 $("#maison").onclick=()=>aller("home");
 
 function ouvrirModule(dest){
+  if(dest==="renf"){ remplirRenf(); return aller("renf"); }
   noter(dest==="breath"?"respiration":dest==="wall"?"mur":"bouger");
   if(dest==="bouger") remplirCartes();
   aller(dest);
@@ -874,7 +1006,8 @@ cog.addEventListener("pointerdown",()=>{
 $("#fermer").onclick=()=>$("#panel").classList.remove("on");
 function groupe(sel,fn){ $$(sel+" button").forEach(b=>b.onclick=()=>{
   $$(sel+" button").forEach(x=>x.classList.toggle("on",x===b)); fn(b); sauverReglages(); }); }
-groupe("#rMode",b=>{ S.mode=b.dataset.mode; cog.style.opacity=S.mode==="seul"?".18":".5"; });
+groupe("#rMode",b=>{ S.mode=b.dataset.mode; cog.style.opacity=S.mode==="seul"?".18":".5";
+  document.body.dataset.mode=S.mode; });
 groupe("#rTimer",b=>{ S.timer=+b.dataset.min; lancerTimer(); });
 groupe("#rRythme",b=>{ const p=b.dataset.r.split(",").map(Number); S.inspire=p[0]; S.expire=p[1]; stopSouffle(); });
 groupe("#rDuree",b=>{ S.duree=+b.dataset.d; stopSouffle(); });
@@ -885,6 +1018,34 @@ function puces(){
   DB.eleves.forEach((n,i)=>{ const s=document.createElement("span"); s.innerHTML=n+"<b>✕</b>";
     s.querySelector("b").onclick=()=>{ DB.eleves.splice(i,1); ranger(); puces(); }; z.appendChild(s); });
 }
+function puceRenf(){
+  const z=$("#puceRenf"); z.innerHTML="";
+  DB.renf.forEach((r,i)=>{
+    const d=document.createElement("div"); d.className="miniRenf";
+    d.innerHTML='<img src="'+r.img+'" alt=""><span>'+r.n+" · "+r.min+" min</span><b style=\"color:var(--rose);padding:0 4px\">✕</b>";
+    d.querySelector("b").onclick=()=>{ DB.renf.splice(i,1); ranger(); puceRenf(); remplirRenf(); };
+    z.appendChild(d);
+  });
+}
+$("#ajoutRenf").onclick=()=>$("#photoInput").click();
+$("#photoInput").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  redimensionner(f,data=>{ photoTmp=data; $("#apercu").src=data;
+    $("#formRenf").style.display="block"; $("#nomRenf").value=""; });
+  e.target.value="";
+});
+$$("#minRenf button").forEach(b=>b.onclick=()=>{
+  minForm=+b.dataset.m; $$("#minRenf button").forEach(x=>x.classList.toggle("on",x===b)); });
+$("#annulRenf").onclick=()=>{ photoTmp=null; $("#formRenf").style.display="none"; };
+$("#validRenf").onclick=()=>{
+  if(!photoTmp) return;
+  const n=$("#nomRenf").value.trim()||"sans nom";
+  DB.renf.push({img:photoTmp,n:n,min:minForm});
+  const avant=PERSIST; ranger();
+  if(avant&&!PERSIST){ DB.renf.pop(); $("#etatRenf").textContent="Mémoire pleine : supprime une photo avant d'en ajouter une autre."; }
+  else $("#etatRenf").textContent=DB.renf.length+" photo(s) enregistrée(s) sur cette tablette.";
+  photoTmp=null; $("#formRenf").style.display="none"; puceRenf(); remplirRenf();
+};
 $("#nouvEleve").addEventListener("keydown",e=>{
   if(e.key!=="Enter") return;
   const v=e.target.value.trim();
@@ -902,6 +1063,9 @@ $("#visageAccueil").innerHTML=visage(EMOTIONS[6],74);
 $$(".marche b").forEach((b,i)=>b.innerHTML=visage(NIVEAUX[i],"100%"));
 $("#icoBouger").innerHTML='<svg viewBox="0 0 120 120" width="74" height="74"><circle cx="60" cy="60" r="48" fill="#e0a76a"/><circle cx="60" cy="34" r="9" fill="#0f1f29"/><path d="M60 45 l0 26 M60 71 l-13 22 M60 71 l14 22 M60 52 l-20 -8 M60 52 l21 -6" stroke="#0f1f29" stroke-width="7" stroke-linecap="round" fill="none"/></svg>';
 $("#icoBouger2").innerHTML=$("#icoBouger").innerHTML;
+$("#icoRenf").innerHTML='<svg viewBox="0 0 120 120" width="74" height="74"><circle cx="60" cy="60" r="48" fill="#9d8cc0"/><path d="M60 32l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" fill="#0f1f29"/></svg>';
+document.body.dataset.mode=S.mode;
+puceRenf();
 remplirCartes(); puces(); etatStock(); forme.style.transform="scale(.8)"; lancerTimer();
 </script>
 </body>
