@@ -200,12 +200,17 @@ canvas{width:100%;height:100%;display:block;border-radius:20px;background:var(--
 #vide{color:var(--galet-doux);text-align:center;margin-top:50px}
 
 /* ---------- boutons flottants ---------- */
-#maison,#cog{position:fixed;bottom:16px;width:50px;height:50px;border-radius:50%;
+#cog{position:fixed;bottom:16px;right:16px;width:50px;height:50px;border-radius:50%;
   background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;
-  font-size:22px;z-index:70}
-#maison{left:16px;display:none}
-#maison.show{display:flex}
-#cog{right:16px;opacity:.5;font-size:20px}
+  font-size:20px;z-index:70;opacity:.5}
+#retourH{position:fixed;top:calc(14px + env(safe-area-inset-top));left:calc(14px + env(safe-area-inset-left));
+  width:66px;height:66px;border-radius:22px;background:var(--brume-haut);color:var(--galet);
+  display:none;align-items:center;justify-content:center;z-index:75;
+  box-shadow:0 2px 10px rgba(0,0,0,.25)}
+#retourH svg{width:34px;height:34px}
+#retourH:active{background:var(--eau);color:#0e2b2a}
+body.ailleurs #retourH{display:flex}
+body.ailleurs .screen{padding-top:94px}
 #fini{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:70;display:none;
   padding:15px 34px;border-radius:999px;background:var(--brume-haut);font-size:18px}
 body.seance #fini{display:block}
@@ -236,7 +241,7 @@ body.seance #fini{display:block}
 #fiche{display:none}
 @media print{
   body{background:#fff;color:#000;overflow:visible}
-  .screen,#cog,#maison,#fini,#panel,#bar,#barLabel,#fin{display:none!important}
+  .screen,#cog,#retourH,#fini,#panel,#bar,#barLabel,#fin{display:none!important}
   #fiche{display:block;padding:0;font-size:12pt}
   #fiche h1{font-size:17pt;margin:0 0 4pt}
   #fiche table{width:100%;border-collapse:collapse;margin-top:12pt}
@@ -424,7 +429,7 @@ body.seance #fini{display:block}
   </div>
 </section>
 
-<button id="maison">⌂</button>
+<button id="retourH" aria-label="Retour"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M28 10 L14 24 L28 38"/></svg></button>
 <button id="fini">J'ai fini</button>
 <button id="cog">⚙</button>
 
@@ -821,16 +826,21 @@ function clore(){
 }
 
 /* ============ navigation ============ */
-function aller(id){
+let HIST=[];
+function aller(id,sansHist){
+  const actuel=$(".screen.on");
+  if(id==="home") HIST=[];
+  else if(actuel&&actuel.id!==id&&!sansHist) HIST.push(actuel.id);
   $$(".screen").forEach(s=>s.classList.toggle("on",s.id===id));
-  $("#maison").classList.toggle("show",id!=="home");
+  document.body.classList.toggle("ailleurs",id!=="home");
   if(id!=="breath") stopSouffle();
   if(id!=="wall") tousSonsOff();
   if(id!=="sablierEcran") arreterSablier();
   if(id==="wall") setTimeout(dimensionner,40);
   boucle();
 }
-$("#maison").onclick=()=>aller("home");
+function retour(){ aller(HIST.length?HIST.pop():"home",true); }
+$("#retourH").onclick=retour;
 
 function ouvrirModule(dest){
   if(dest==="renf"){ remplirRenf(); return aller("renf"); }
