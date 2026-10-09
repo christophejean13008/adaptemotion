@@ -850,7 +850,11 @@ let HIST=[];
 function aller(id,sansHist){
   const actuel=$(".screen.on");
   if(id==="home") HIST=[];
-  else if(actuel&&actuel.id!==id&&!sansHist) HIST.push(actuel.id);
+  else if(actuel&&actuel.id!==id&&!sansHist){
+    const deja=HIST.lastIndexOf(id);
+    if(deja>=0) HIST.length=deja;        /* on revient sur ses pas : on coupe la pile */
+    else HIST.push(actuel.id);
+  }
   $$(".screen").forEach(s=>s.classList.toggle("on",s.id===id));
   document.body.classList.toggle("ailleurs",id!=="home");
   if(id!=="breath") stopSouffle();
