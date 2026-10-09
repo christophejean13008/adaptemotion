@@ -58,8 +58,25 @@ body.seance .screen{padding-bottom:100px}
 body[data-mode="seul"] #dureeRenf{display:none}
 .miniRenf{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:var(--brume);font-size:15px}
 .miniRenf img{width:40px;height:40px;object-fit:cover;border-radius:9px}
-#apercu{width:92px;height:92px;object-fit:cover;border-radius:14px;display:block;margin-bottom:12px}
-#formRenf{display:none;margin-top:12px}
+#diag{padding:15px 17px;border-radius:16px;margin-bottom:14px;font-size:15px;line-height:1.4;flex:0 0 auto}
+#diag b{display:block;font-size:17px;font-weight:500;margin-bottom:4px}
+#diag.ok{background:rgba(111,184,176,.16);border-left:5px solid var(--eau)}
+#diag.moyen{background:rgba(224,167,106,.16);border-left:5px solid var(--sable)}
+#diag.ko{background:rgba(208,138,138,.18);border-left:5px solid var(--rose)}
+#listePhotos{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-bottom:14px}
+#actionsPhotos{gap:11px}
+#actionsPhotos button{padding:15px 20px;border-radius:16px;font-size:17px}
+#actionsPhotos .fort{background:var(--eau);color:#0e2b2a;flex:1;min-width:220px;font-size:19px;padding:18px 20px}
+#ouvrirPhotos{width:100%;padding:18px;border-radius:18px;background:var(--eau);color:#0e2b2a;font-size:19px}
+#editPhoto{align-items:center;justify-content:center;gap:16px}
+#apercu{width:min(30vh,56vw);aspect-ratio:1;object-fit:cover;border-radius:22px;display:block;background:var(--brume)}
+#editPhoto input[type=text]{max-width:380px;text-align:center}
+#editPhoto h3{font-size:15px;font-weight:400;color:var(--galet-doux);margin:0}
+#editPhoto .reglages{justify-content:center;max-width:420px}
+#valideLigne{display:flex;gap:11px;margin-top:6px}
+#valideLigne button{padding:16px 30px;border-radius:999px;font-size:18px;background:var(--brume)}
+#valideLigne #validRenf{background:var(--eau);color:#0e2b2a}
+#ajoutVide{margin-top:18px;padding:16px 26px;border-radius:999px;background:var(--brume-haut);font-size:18px}
 #accueilNom{flex:0 0 auto;color:var(--galet-doux);margin:0 0 2px;font-size:16px;min-height:1.4em}
 
 .lentille{width:74px;height:74px;border-radius:50%;
@@ -320,6 +337,31 @@ body.seance #fini{display:block}
   <button id="sablierBtn" class="suite pret" style="max-width:280px">C'est parti</button>
 </section>
 
+<!-- PHOTOS (adulte) -->
+<section id="photos" class="screen">
+  <div class="tete"><h1>Photos et sabliers</h1></div>
+  <div id="diag"></div>
+  <div id="listePhotos"></div>
+  <div class="reglages" id="actionsPhotos">
+    <button class="fort" id="ajoutRenf">Prendre une photo</button>
+    <button id="exportRenf">Sauvegarder dans un fichier</button>
+    <button id="importRenf">Restaurer un fichier</button>
+  </div>
+  <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+  <input type="file" id="jsonInput" accept="application/json,.json" style="display:none">
+</section>
+<section id="editPhoto" class="screen">
+  <div class="tete"><h1>Nouvelle photo</h1></div>
+  <img id="apercu" alt="">
+  <input type="text" id="nomRenf" placeholder="Nom (facultatif)">
+  <h3>Durée du sablier</h3>
+  <div class="reglages" id="minRenf">
+    <button data-m="1">1 min</button><button data-m="2">2 min</button>
+    <button class="on" data-m="3">3 min</button><button data-m="5">5 min</button><button data-m="10">10 min</button>
+  </div>
+  <div id="valideLigne"><button id="annulRenf">Annuler</button><button id="validRenf">Enregistrer</button></div>
+</section>
+
 <!-- MUR -->
 <section id="wall" class="screen">
   <div class="tete"><h1>Le mur</h1></div>
@@ -378,21 +420,9 @@ body.seance #fini{display:block}
     <div class="puce" id="puces"></div>
     <input type="text" id="nouvEleve" placeholder="Ajouter — puis Entrée">
   </div>
-  <div class="bloc"><h3>Renforçateurs (photos prises avec l'élève)</h3>
-    <div class="puce" id="puceRenf"></div>
-    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
-    <div class="choix"><button id="ajoutRenf">Prendre ou choisir une photo</button></div>
-    <div id="formRenf">
-      <img id="apercu" alt="">
-      <input type="text" id="nomRenf" placeholder="Nom (facultatif)">
-      <h3 style="margin:12px 0 8px">Durée du sablier</h3>
-      <div class="choix" id="minRenf">
-        <button data-m="1">1 min</button><button data-m="2">2 min</button>
-        <button class="on" data-m="3">3 min</button><button data-m="5">5 min</button><button data-m="10">10 min</button>
-      </div>
-      <div class="choix" style="margin-top:12px"><button id="validRenf">Ajouter</button><button id="annulRenf">Annuler</button></div>
-    </div>
-    <p class="note" id="etatRenf"></p>
+  <div class="bloc"><h3>Renforçateurs</h3>
+    <button id="ouvrirPhotos">Photos et sabliers</button>
+    <p class="note" id="resumeRenf" style="margin-top:9px"></p>
   </div>
   <div class="bloc"><h3>Demander l'émotion et l'intensité</h3>
     <div class="choix" id="rBaro"><button class="on" data-b="1">Oui</button><button data-b="0">Non</button></div>
@@ -533,11 +563,12 @@ const DEFIS=[
   {i:"⇄",t:"Marcher dans le couloir",g:"2",p:"Deux allers-retours dans le couloir, à pas lents."}
 ];
 
-/* ============ renforçateurs ============ */
+/* ============ renforçateurs : photos + sablier ============ */
 DB.renf=[];
 let renfCourant=null, minRenf=3, sablierT=null, photoTmp=null, minForm=3;
-let IDB=null, IDBok=false, REPLI=false;
+let IDB=null, STOCK="aucun";
 
+/* --- couche de stockage, testée pour de vrai au démarrage --- */
 function idbOuvrir(){ return new Promise(res=>{
   let fini=false; const ok=v=>{ if(!fini){ fini=true; res(v); } };
   try{
@@ -545,48 +576,84 @@ function idbOuvrir(){ return new Promise(res=>{
     const rq=indexedDB.open("adaptemotion",1);
     rq.onupgradeneeded=()=>{ const d=rq.result;
       if(!d.objectStoreNames.contains("renf")) d.createObjectStore("renf",{keyPath:"id"}); };
-    rq.onsuccess=()=>{ IDB=rq.result; IDBok=true; ok(true); };
+    rq.onsuccess=()=>{ IDB=rq.result; ok(true); };
     rq.onerror=()=>ok(false); rq.onblocked=()=>ok(false);
-    setTimeout(()=>ok(IDBok),2500);
+    setTimeout(()=>ok(false),3000);
   }catch(e){ ok(false); } }); }
 function idbLire(){ return new Promise(res=>{
-  if(!IDBok) return res(null);
+  if(!IDB) return res(null);
   try{ const r=IDB.transaction("renf","readonly").objectStore("renf").getAll();
     r.onsuccess=()=>res(r.result||[]); r.onerror=()=>res(null);
   }catch(e){ res(null); } }); }
 function idbEcrire(o){ return new Promise(res=>{
-  if(!IDBok) return res(false);
+  if(!IDB) return res(false);
   try{ const t=IDB.transaction("renf","readwrite"); t.objectStore("renf").put(o);
     t.oncomplete=()=>res(true); t.onerror=()=>res(false); t.onabort=()=>res(false);
   }catch(e){ res(false); } }); }
 function idbEffacer(id){ return new Promise(res=>{
-  if(!IDBok) return res(false);
+  if(!IDB) return res(false);
   try{ const t=IDB.transaction("renf","readwrite"); t.objectStore("renf").delete(id);
     t.oncomplete=()=>res(true); t.onerror=()=>res(false);
   }catch(e){ res(false); } }); }
-function repliEcrire(){
-  try{ localStorage.setItem("adaptemotion.renf",JSON.stringify(DB.renf)); return true; }
-  catch(e){ return false; } }
-function etatRenf(){
-  const n=DB.renf.length;
-  $("#etatRenf").textContent = IDBok
-    ? n+" photo(s) enregistrée(s) sur cette tablette."
-    : REPLI
-      ? n+" photo(s) en mémoire limitée : compte 4 ou 5 photos au maximum."
-      : "Les photos ne peuvent pas être enregistrées ici. Ouvre l'appli depuis son adresse internet (GitHub Pages), pas depuis un fichier ouvert directement sur l'iPad.";
-}
-async function demarrerStockage(){
-  await idbOuvrir();
-  let liste=await idbLire();
-  if(liste===null){
-    IDBok=false;
-    try{ const b=localStorage.getItem("adaptemotion.renf");
-      liste=b?JSON.parse(b):[]; REPLI=true; }catch(e){ liste=[]; REPLI=false; }
+
+async function testerStockage(){
+  STOCK="aucun";
+  if(await idbOuvrir()){
+    const t={id:"__test",img:"x",min:1};
+    if(await idbEcrire(t)){
+      const l=await idbLire();
+      if(l&&l.some(x=>x.id==="__test")){ STOCK="idb"; await idbEffacer("__test"); }
+    }
   }
-  DB.renf=liste||[];
-  puceRenf(); remplirRenf(); etatRenf();
+  if(STOCK==="aucun"){
+    try{ localStorage.setItem("adaptemotion.test","1");
+      if(localStorage.getItem("adaptemotion.test")==="1") STOCK="local";
+      localStorage.removeItem("adaptemotion.test");
+    }catch(e){}
+  }
+}
+async function chargerPhotos(){
+  if(STOCK==="idb"){ DB.renf=(await idbLire())||[]; return; }
+  if(STOCK==="local"){
+    try{ const b=localStorage.getItem("adaptemotion.renf"); DB.renf=b?JSON.parse(b):[]; }
+    catch(e){ DB.renf=[]; }
+    return;
+  }
+  DB.renf=[];
+}
+async function enregistrerPhotos(){
+  if(STOCK==="idb"){
+    for(const r of DB.renf){ if(!await idbEcrire(r)) return false; }
+    return true;
+  }
+  if(STOCK==="local"){
+    try{ localStorage.setItem("adaptemotion.renf",JSON.stringify(DB.renf)); return true; }
+    catch(e){ return false; }
+  }
+  return false;
+}
+function majDiag(){
+  const d=$("#diag"), n=DB.renf.length;
+  d.className="";
+  if(STOCK==="idb"){ d.classList.add("ok");
+    d.innerHTML="<b>Les photos sont enregistrées sur cette tablette.</b>"+n+
+      " photo(s) en mémoire. Pense à « Sur l'écran d'accueil » depuis le menu Partager : "+
+      "Safari peut vider les données d'un site resté plusieurs jours sans visite, mais pas celles d'une app ajoutée à l'écran d'accueil."; }
+  else if(STOCK==="local"){ d.classList.add("moyen");
+    d.innerHTML="<b>Enregistrement limité.</b>"+n+
+      " photo(s). Cette tablette n'autorise que la petite mémoire : compte 4 photos au maximum. "+
+      "Utilise « Sauvegarder dans un fichier » pour garder une copie."; }
+  else { d.classList.add("ko");
+    d.innerHTML="<b>Rien ne peut être enregistré ici.</b>"+
+      "La page a été ouverte comme un fichier local ou dans un aperçu. Ouvre-la depuis son adresse internet "+
+      "(ta page GitHub) et tout fonctionnera. Les photos prises maintenant marchent jusqu'à la fermeture : "+
+      "« Sauvegarder dans un fichier » permet de les récupérer ensuite."; }
+  const r=$("#resumeRenf");
+  if(r) r.textContent = STOCK==="aucun" ? "Enregistrement impossible sur cette page — ouvre le module pour le détail."
+    : n+" photo(s) enregistrée(s).";
 }
 
+/* --- photo --- */
 function redimensionner(file,cb){
   const fr=new FileReader();
   fr.onload=()=>{ const im=new Image();
@@ -595,12 +662,93 @@ function redimensionner(file,cb){
       c.width=Math.round(im.width*r); c.height=Math.round(im.height*r);
       c.getContext("2d").drawImage(im,0,0,c.width,c.height);
       cb(c.toDataURL("image/jpeg",.75)); };
-    im.src=fr.result; };
+    im.onerror=()=>cb(null); im.src=fr.result; };
+  fr.onerror=()=>cb(null);
   fr.readAsDataURL(file);
 }
+$("#ajoutRenf").onclick=()=>$("#photoInput").click();
+$("#photoInput").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0]; e.target.value="";
+  if(!f) return;
+  redimensionner(f,data=>{
+    if(!data){ alert("Photo illisible, réessaie."); return; }
+    photoTmp=data; minForm=3;
+    $("#apercu").src=data; $("#nomRenf").value="";
+    $$("#minRenf button").forEach(x=>x.classList.toggle("on",x.dataset.m==="3"));
+    aller("editPhoto");
+  });
+});
+$$("#minRenf button").forEach(b=>b.onclick=()=>{
+  minForm=+b.dataset.m; $$("#minRenf button").forEach(x=>x.classList.toggle("on",x===b)); });
+$("#annulRenf").onclick=()=>{ photoTmp=null; aller("photos"); };
+$("#validRenf").onclick=async()=>{
+  if(!photoTmp) return aller("photos");
+  const o={id:"r"+Date.now(),img:photoTmp,n:$("#nomRenf").value.trim(),min:minForm};
+  DB.renf.push(o); photoTmp=null;
+  const ok=await enregistrerPhotos();
+  if(!ok&&STOCK!=="aucun"){ DB.renf.pop();
+    alert("Mémoire pleine : supprime une photo avant d'en ajouter une autre."); }
+  majListePhotos(); remplirRenf(); majDiag(); aller("photos");
+};
+
+/* --- liste côté adulte --- */
+function majListePhotos(){
+  const z=$("#listePhotos"); z.innerHTML="";
+  if(!DB.renf.length){
+    z.innerHTML='<p class="note" style="text-align:center;margin-top:30px">Aucune photo pour l\'instant.</p>';
+    return;
+  }
+  DB.renf.forEach((r,i)=>{
+    const d=document.createElement("div"); d.className="miniRenf"; d.style.marginBottom="9px";
+    d.innerHTML='<img src="'+r.img+'" alt=""><span style="flex:1">'+(r.n?r.n+" · ":"")+r.min+
+      ' min</span><b style="color:var(--rose);padding:4px 10px;font-size:20px">✕</b>';
+    d.querySelector("b").onclick=async()=>{
+      const id=r.id; DB.renf.splice(i,1);
+      if(STOCK==="idb") await idbEffacer(id); else await enregistrerPhotos();
+      majListePhotos(); remplirRenf(); majDiag();
+    };
+    z.appendChild(d);
+  });
+}
+$("#ouvrirPhotos").onclick=()=>{ $("#panel").classList.remove("on"); majListePhotos(); majDiag(); aller("photos"); };
+
+/* --- sauvegarde / restauration dans un fichier --- */
+$("#exportRenf").onclick=()=>{
+  if(!DB.renf.length) return alert("Il n'y a aucune photo à sauvegarder.");
+  const b=new Blob([JSON.stringify({renf:DB.renf})],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(b);
+  a.download="adaptemotion-photos.json"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+};
+$("#importRenf").onclick=()=>$("#jsonInput").click();
+$("#jsonInput").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0]; e.target.value="";
+  if(!f) return;
+  const fr=new FileReader();
+  fr.onload=async()=>{
+    try{
+      const o=JSON.parse(fr.result);
+      if(!o.renf||!o.renf.length) return alert("Ce fichier ne contient pas de photos.");
+      const vus={}; DB.renf.forEach(r=>vus[r.id]=1);
+      o.renf.forEach(r=>{ if(r&&r.img&&!vus[r.id]) DB.renf.push({id:r.id||"r"+Math.random(),img:r.img,n:r.n||"",min:r.min||3}); });
+      await enregistrerPhotos(); majListePhotos(); remplirRenf(); majDiag();
+    }catch(err){ alert("Fichier illisible."); }
+  };
+  fr.readAsText(f);
+});
+
+/* --- côté élève --- */
 function remplirRenf(){
   const z=$("#grilleRenf"); z.innerHTML="";
-  if(!DB.renf.length){ z.innerHTML='<p id="renfVide">Aucune photo pour l\'instant.<br>L\'adulte peut en ajouter dans les réglages.</p>'; return; }
+  if(!DB.renf.length){
+    z.innerHTML='<p id="renfVide">Aucune photo pour l\'instant.</p>';
+    if(S.mode!=="seul"){
+      const b=document.createElement("button"); b.id="ajoutVide"; b.textContent="Ajouter des photos";
+      b.onclick=()=>{ majListePhotos(); majDiag(); aller("photos"); };
+      z.appendChild(b);
+    }
+    return;
+  }
   DB.renf.forEach(r=>{
     const b=document.createElement("button"); b.className="renf";
     b.innerHTML='<img src="'+r.img+'" alt="">'+(r.n?"<span>"+r.n+"</span>":"");
@@ -627,14 +775,12 @@ function peindreSablier(p){
 function arreterSablier(){ clearInterval(sablierT); sablierT=null; }
 function lancerSablier(){
   const total=minRenf*60*1000,t0=Date.now();
-  $("#sablierBtn").textContent="Arrêter";
-  $("#sablierFin").textContent="";
+  $("#sablierBtn").textContent="Arrêter"; $("#sablierFin").textContent="";
   sablierT=setInterval(()=>{
     const p=Math.max(0,1-(Date.now()-t0)/total);
     peindreSablier(p);
     if(p<=0){ arreterSablier(); peindreSablier(0);
-      $("#sablierFin").textContent="C'est fini."; $("#sablierBtn").textContent="Je range";
-      carillon(); }
+      $("#sablierFin").textContent="C'est fini."; $("#sablierBtn").textContent="Je range"; carillon(); }
   },250);
   peindreSablier(1); noter(renfCourant.n?"renforçateur : "+renfCourant.n:"renforçateur");
 }
@@ -651,6 +797,10 @@ function carillon(){ audio();
     g.gain.exponentialRampToValueAtTime(.001,t+.9);
     o.connect(g); g.connect(MASTER); o.start(t); o.stop(t+1);
   });
+}
+async function demarrerStockage(){
+  await testerStockage(); await chargerPhotos();
+  majListePhotos(); remplirRenf(); majDiag();
 }
 
 /* ============ audio ============ */
@@ -1070,43 +1220,6 @@ function puces(){
   DB.eleves.forEach((n,i)=>{ const s=document.createElement("span"); s.innerHTML=n+"<b>✕</b>";
     s.querySelector("b").onclick=()=>{ DB.eleves.splice(i,1); ranger(); puces(); }; z.appendChild(s); });
 }
-function puceRenf(){
-  const z=$("#puceRenf"); z.innerHTML="";
-  DB.renf.forEach((r,i)=>{
-    const d=document.createElement("div"); d.className="miniRenf";
-    d.innerHTML='<img src="'+r.img+'" alt=""><span>'+(r.n?r.n+" · ":"")+r.min+
-      ' min</span><b style=\"color:var(--rose);padding:0 4px\">✕</b>';
-    d.querySelector("b").onclick=async()=>{
-      const id=r.id; DB.renf.splice(i,1);
-      if(IDBok) await idbEffacer(id); else if(REPLI) repliEcrire();
-      puceRenf(); remplirRenf(); etatRenf();
-    };
-    z.appendChild(d);
-  });
-}
-$("#ajoutRenf").onclick=()=>$("#photoInput").click();
-$("#photoInput").addEventListener("change",e=>{
-  const f=e.target.files&&e.target.files[0]; if(!f) return;
-  redimensionner(f,data=>{ photoTmp=data; $("#apercu").src=data;
-    $("#formRenf").style.display="block"; $("#nomRenf").value=""; });
-  e.target.value="";
-});
-$$("#minRenf button").forEach(b=>b.onclick=()=>{
-  minForm=+b.dataset.m; $$("#minRenf button").forEach(x=>x.classList.toggle("on",x===b)); });
-$("#annulRenf").onclick=()=>{ photoTmp=null; $("#formRenf").style.display="none"; };
-$("#validRenf").onclick=async()=>{
-  if(!photoTmp) return;
-  const o={id:"r"+Date.now(),img:photoTmp,n:$("#nomRenf").value.trim(),min:minForm};
-  DB.renf.push(o);
-  let ok=false;
-  if(IDBok) ok=await idbEcrire(o);
-  else if(REPLI) ok=repliEcrire();
-  if(!ok&&(IDBok||REPLI)){
-    DB.renf.pop();
-    $("#etatRenf").textContent="Mémoire pleine : supprime une photo avant d'en ajouter une autre.";
-  } else etatRenf();
-  photoTmp=null; $("#formRenf").style.display="none"; puceRenf(); remplirRenf();
-};
 $("#nouvEleve").addEventListener("keydown",e=>{
   if(e.key!=="Enter") return;
   const v=e.target.value.trim();
