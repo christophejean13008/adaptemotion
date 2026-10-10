@@ -74,6 +74,19 @@ body[data-mode="seul"] #dureeRenf{display:none}
 #diag.ko{background:rgba(208,138,138,.18);border-left:5px solid var(--rose)}
 #listePhotos{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-bottom:14px}
 #photos{padding-bottom:80px}
+#imprimerRenf{grid-column:1/-1;background:var(--brume);font-size:18px!important;padding:16px!important;
+  flex-direction:row!important;gap:12px!important}
+#imprimerRenf svg{width:30px!important;height:30px!important}
+#carteTaille{align-items:center;justify-content:center;gap:18px}
+#carteTaille h1{text-align:center}
+#apercuGrille{display:grid;gap:8px;width:min(62vw,340px);aspect-ratio:1/1.414;background:#fff;
+  border-radius:10px;padding:8px;align-content:start}
+#apercuGrille div{background:#9fc3cf;border-radius:4px;aspect-ratio:1}
+#tailleChoix{display:flex;gap:11px;flex-wrap:wrap;justify-content:center;max-width:520px}
+#tailleChoix button{padding:15px 22px;border-radius:16px;background:var(--brume);font-size:17px}
+#tailleChoix button.on{background:var(--eau);color:#0e2b2a}
+#tailleInfo{color:var(--galet-doux);margin:0;text-align:center}
+#lancerImpr{padding:18px 44px;border-radius:999px;background:var(--eau);color:#0e2b2a;font-size:20px}
 #actionsPhotos{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 @media (max-aspect-ratio:3/4){#actionsPhotos{grid-template-columns:1fr}}
 #actionsPhotos button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;
@@ -250,9 +263,18 @@ body.seance #fini{display:block}
 #fin button{padding:16px 42px;border-radius:999px;background:var(--eau);color:#0e2b2a;font-size:20px}
 
 #fiche{display:none}
+#planche{display:none}
 @media print{
   body{background:#fff;color:#000;overflow:visible}
   .screen,#cog,#retourH,#fini,#panel,#bar,#barLabel,#fin{display:none!important}
+  body.impr #fiche{display:none!important}
+  body.impr #planche{display:grid!important;gap:6mm;align-content:start}
+  .vignette{break-inside:avoid;page-break-inside:avoid;text-align:center;
+    border:1.2pt dashed #999;border-radius:3mm;padding:3mm}
+  .vignette img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:2mm;display:block}
+  .vignette b{display:block;font-weight:500;margin-top:2mm;font-size:11pt;color:#000}
+  .vignette i{font-style:normal;font-size:9.5pt;color:#555}
+  @page{margin:10mm}
   #fiche{display:block;padding:0;font-size:12pt}
   #fiche h1{font-size:17pt;margin:0 0 4pt}
   #fiche table{width:100%;border-collapse:collapse;margin-top:12pt}
@@ -391,6 +413,13 @@ body.seance #fini{display:block}
       </svg>
       <span>Choisir dans les photos de la tablette</span>
     </button>
+    <button id="imprimerRenf">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 19V7h22v12"/><rect x="6" y="19" width="36" height="14" rx="3"/>
+        <path d="M13 29h22v12H13z"/>
+      </svg>
+      <span>Imprimer les photos</span>
+    </button>
   </div>
   <input type="file" id="camIn" accept="image/*" capture="environment" style="position:absolute;left:-9999px">
   <input type="file" id="libIn" accept="image/*" style="position:absolute;left:-9999px">
@@ -405,6 +434,20 @@ body.seance #fini{display:block}
     <button class="on" data-m="3">3 min</button><button data-m="5">5 min</button><button data-m="10">10 min</button>
   </div>
   <div id="valideLigne"><button id="annulRenf">Annuler</button><button id="validRenf">Enregistrer</button></div>
+</section>
+
+<!-- IMPRESSION -->
+<section id="carteTaille" class="screen">
+  <div class="tete"><h1>Imprimer les photos</h1></div>
+  <div id="apercuGrille"></div>
+  <div id="tailleChoix">
+    <button data-c="2">Grand<br>2 par ligne</button>
+    <button class="on" data-c="3">Moyen<br>3 par ligne</button>
+    <button data-c="4">Petit<br>4 par ligne</button>
+    <button data-c="5">Très petit<br>5 par ligne</button>
+  </div>
+  <p id="tailleInfo"></p>
+  <button id="lancerImpr">Imprimer</button>
 </section>
 
 <!-- MUR -->
@@ -518,6 +561,7 @@ body.seance #fini{display:block}
 </div>
 
 <div id="fiche"></div>
+<div id="planche"></div>
 
 <script>
 "use strict";
@@ -711,6 +755,36 @@ function majListePhotos(){
     z.appendChild(d);
   });
 }
+/* --- impression des photos --- */
+let colImpr=3;
+const LARG={2:"8,5 cm",3:"5,5 cm",4:"4 cm",5:"3,1 cm"};
+function majApercu(){
+  const g=$("#apercuGrille"); g.style.gridTemplateColumns="repeat("+colImpr+",1fr)";
+  const n=Math.max(colImpr*2,Math.min(DB.renf.length||colImpr*2,colImpr*5));
+  g.innerHTML=""; for(let i=0;i<n;i++) g.appendChild(document.createElement("div"));
+  const parPage=colImpr*Math.floor(colImpr*1.414*1.03);
+  $("#tailleInfo").textContent="Environ "+LARG[colImpr]+" de côté, "+
+    parPage+" photos par page · "+DB.renf.length+" à imprimer";
+}
+$$("#tailleChoix button").forEach(b=>b.onclick=()=>{
+  colImpr=+b.dataset.c;
+  $$("#tailleChoix button").forEach(x=>x.classList.toggle("on",x===b));
+  majApercu();
+});
+$("#imprimerRenf").onclick=()=>{
+  if(!DB.renf.length) return alert("Il n'y a aucune photo à imprimer.");
+  majApercu(); aller("carteTaille");
+};
+$("#lancerImpr").onclick=()=>{
+  const z=$("#planche");
+  z.style.gridTemplateColumns="repeat("+colImpr+",1fr)";
+  z.innerHTML=DB.renf.map(r=>'<div class="vignette"><img src="'+img(r)+'" alt="">'+
+    (r.n?"<b>"+r.n+"</b>":"")+'<i>'+r.min+' min</i></div>').join("");
+  document.body.classList.add("impr");
+  setTimeout(()=>{ window.print();
+    setTimeout(()=>document.body.classList.remove("impr"),800); },80);
+};
+
 $("#ouvrirPhotos").onclick=()=>{ $("#panel").classList.remove("on"); majListePhotos(); majDiag(); aller("photos"); };
 
 /* --- côté élève --- */
